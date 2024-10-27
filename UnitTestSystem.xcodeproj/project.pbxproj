@@ -25,6 +25,7 @@
 /* Begin PBXFileReference section */
 		8BC473082CCEB6C800ADCB56 /* UnitTestSystem */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = UnitTestSystem; sourceTree = BUILT_PRODUCTS_DIR; };
 		8BC4730B2CCEB6C800ADCB56 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		8BC473122CCEB8D700ADCB56 /* Timer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Timer.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,6 +59,7 @@
 			isa = PBXGroup;
 			children = (
 				8BC4730B2CCEB6C800ADCB56 /* main.cpp */,
+				8BC473122CCEB8D700ADCB56 /* Timer.h */,
 			);
 			path = UnitTestSystem;
 			sourceTree = "<group>";
