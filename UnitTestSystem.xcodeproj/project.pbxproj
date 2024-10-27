@@ -27,6 +27,8 @@
 		8BC4730B2CCEB6C800ADCB56 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		8BC473122CCEB8D700ADCB56 /* Timer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Timer.h; sourceTree = "<group>"; };
 		8BC473132CCEC10500ADCB56 /* MemoryAllocator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MemoryAllocator.h; sourceTree = "<group>"; };
+		8BC473142CCECBDD00ADCB56 /* TestClassBase.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TestClassBase.h; sourceTree = "<group>"; };
+		8BC473152CCF0A4300ADCB56 /* UnitTestSystem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UnitTestSystem.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -62,6 +64,8 @@
 				8BC4730B2CCEB6C800ADCB56 /* main.cpp */,
 				8BC473122CCEB8D700ADCB56 /* Timer.h */,
 				8BC473132CCEC10500ADCB56 /* MemoryAllocator.h */,
+				8BC473142CCECBDD00ADCB56 /* TestClassBase.h */,
+				8BC473152CCF0A4300ADCB56 /* UnitTestSystem.h */,
 			);
 			path = UnitTestSystem;
 			sourceTree = "<group>";
