@@ -1,5 +1,5 @@
 #pragma once
-#include "TestClass.h"
+#include "TestClassBase.h"
 #include <cmath>
 
 #define TEST_MODULE_BEGIN(name)                                                         \
