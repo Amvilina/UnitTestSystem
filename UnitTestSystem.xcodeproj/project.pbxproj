@@ -29,6 +29,7 @@
 		8BC473132CCEC10500ADCB56 /* MemoryAllocator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MemoryAllocator.h; sourceTree = "<group>"; };
 		8BC473142CCECBDD00ADCB56 /* TestClassBase.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TestClassBase.h; sourceTree = "<group>"; };
 		8BC473152CCF0A4300ADCB56 /* UnitTestSystem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UnitTestSystem.h; sourceTree = "<group>"; };
+		8BC473172CCF130C00ADCB56 /* HeaderOnly.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HeaderOnly.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -45,6 +46,7 @@
 		8BC472FF2CCEB6C800ADCB56 = {
 			isa = PBXGroup;
 			children = (
+				8BC473172CCF130C00ADCB56 /* HeaderOnly.h */,
 				8BC4730A2CCEB6C800ADCB56 /* UnitTestSystem */,
 				8BC473092CCEB6C800ADCB56 /* Products */,
 			);
