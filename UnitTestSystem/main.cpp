@@ -55,7 +55,7 @@ TEST_METHOD(RandomException) {
 }
 
 TEST_METHOD(MemoryLeak) {
-    auto a = new char;
+    auto a = new char[10];
 }
 
 TEST_METHOD(NoMemoryLeak) {

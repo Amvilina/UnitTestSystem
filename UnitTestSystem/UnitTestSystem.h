@@ -14,6 +14,7 @@ class name : public UnitTestSystem::TestClassBase {                             
         _name = #name;                                                                  \
         std::cout << _name << ": ";                                                     \
         _methodResults.clear();                                                         \
+        _bytesLeaked = 0;                                                               \
         TEST_METHOD_START(Validation, false){}                                          \
 
 #define TEST_METHOD_START(name, measureTime)                                            \
@@ -27,26 +28,32 @@ class name : public UnitTestSystem::TestClassBase {                             
                 try                                                                     \
              // {
              // }
-#define TEST_METHOD_END                                                                 \
-                catch(const Error& error) {                                             \
-                    methodResult.error = error;                                         \
-                }                                                                       \
-                catch(...) {                                                            \
-                    Error error(0, "", "Unknown exception occured!");                   \
-                    methodResult.error = error;                                         \
-                }                                                                       \
-                methodResult.timeElapsedNanoseconds = timer.GetNanoseconds();           \
-            }                                                                           \
-            if (methodResult.IsSuccess())                                               \
-                methodResult.bytesLeaked = MemoryAllocator::GetUsedBytes();             \
-            _methodResults.push_back(methodResult);                                     \
-            if (_methodResults.size() > 1) {                                            \
-                if (methodResult.IsSuccess())                                           \
-                    std::cout << 'T';                                                   \
-                else                                                                    \
-                    std::cout << 'F';                                                   \
-            }                                                                           \
-        }                                                                               \
+#define TEST_METHOD_END                                                                             \
+                catch(const Error& error) {                                                         \
+                    methodResult.error = error;                                                     \
+                }                                                                                   \
+                catch(...) {                                                                        \
+                    Error error(0, "", "Unknown exception occured!");                               \
+                    methodResult.error = error;                                                     \
+                }                                                                                   \
+                methodResult.timeElapsedNanoseconds = timer.GetNanoseconds();                       \
+            }                                                                                       \
+            if (methodResult.IsSuccess()){                                                          \
+                const auto bytesLeaked = MemoryAllocator::GetUsedBytes();                           \
+                _bytesLeaked += bytesLeaked;                                                        \
+                if (bytesLeaked > 0){                                                               \
+                    Error error(0, "", "Memory leak: " + std::to_string(bytesLeaked) + " byte(s)"); \
+                    methodResult.error = error;                                                     \
+                }                                                                                   \
+            }                                                                                       \
+            _methodResults.push_back(methodResult);                                                 \
+            if (_methodResults.size() > 1) {                                                        \
+                if (methodResult.IsSuccess())                                                       \
+                    std::cout << 'T';                                                               \
+                else                                                                                \
+                    std::cout << 'F';                                                               \
+            }                                                                                       \
+        }                                                                                           \
 
 #define TEST_MODULE_END                                                                 \
         TEST_METHOD_END                                                                 \

@@ -28,45 +28,43 @@ class TestClassBase {
         std::string methodName;
         Error error;
         uint64_t timeElapsedNanoseconds = 0;
-        uint64_t bytesLeaked = 0;
         bool isTimeMeasuring = false;
         
-        std::string GetMessage(size_t width) const {
+        std::string GetMessage(size_t width) const 
+        {
             std::stringstream ss;
             ss << methodName << std::setw((int)(width + 1 - methodName.length())) << ' ';
+            
+            if (IsFailed()) {
+                ss << "FAILED" << " Line " << error.line << ": "
+                << error.code << " <-- " << error.extraMessage << '\n';
+                return ss.str();
+            }
             
             if (IsSuccess() && isTimeMeasuring) {
                 ss << "PASSED <-- " << (double)timeElapsedNanoseconds / 1000000.0 << "ms elapsed\n";
                 return ss.str();
             }
             
-            if (error.NotEmpty()) {
-                ss << "FAILED" << " Line " << error.line << ": "
-                << error.code << " <-- " << error.extraMessage << '\n';
-                return ss.str();
-            }
-            
-            if (bytesLeaked > 0) {
-                ss << "MEMORY LEAK <-- " << bytesLeaked << " bytes leaked\n";
-                return ss.str();
-            }
-
             return "";
         }
         
         bool IsSuccess() const {
-            return error.Empty() && bytesLeaked == 0;
+            return error.Empty();
+        }
+        
+        bool IsFailed() const {
+            return !IsSuccess();
         }
     };
     
     void PrintResults() {
         const auto successfulMethodsCount = SuccessfulMethodsCount();
         const auto allMethodsCount = _methodResults.size();
-        const auto bytesLeaked = GetBytesLeaked();
         const auto longestMethodNameWidth = GetLongestMethodNameWidth();
         
         std::cout << "\n( " << successfulMethodsCount << " / " << allMethodsCount << " )"
-                  << " in " << (double)GetTimeElapsed() / 1000000000.0 << "s with " << bytesLeaked << " bytes leaked\n";
+                  << " in " << (double)GetTimeElapsed() / 1000000000.0 << "s with " << _bytesLeaked << " bytes leaked\n";
         
         std::cout << "=================================================\n";
         for (const auto& result : _methodResults)
@@ -75,6 +73,7 @@ class TestClassBase {
     }
     
     std::string _name;
+    uint64_t _bytesLeaked;
     std::vector<MethodResult> _methodResults;
   private:
     size_t SuccessfulMethodsCount() const {
@@ -90,13 +89,6 @@ class TestClassBase {
         for (const auto& result : _methodResults)
             timeElapsed += result.timeElapsedNanoseconds;
         return timeElapsed;
-    }
-    
-    uint64_t GetBytesLeaked() const {
-        size_t bytesLeaked = 0;
-        for (const auto& result : _methodResults)
-            bytesLeaked += result.bytesLeaked;
-        return bytesLeaked;
     }
     
     size_t GetLongestMethodNameWidth() const {
