@@ -30,45 +30,61 @@ class TestClassBase {
         uint64_t timeElapsedNanoseconds = 0;
         bool isTimeMeasuring = false;
         
-        std::string GetMessage(size_t width) const 
+        std::string GetMessage(size_t methodWidth, size_t descriptionWidth) const
         {
+            if (!IsPrint())
+                return "";
+            
             std::stringstream ss;
-            ss << methodName << std::setw((int)(width + 1 - methodName.length())) << ' ';
             
+            const auto description = GetDesription();
+            const auto extra = GetExtra();
+            const std::string arrow = " <-- ";
+            
+            ss << methodName << std::setw((int)(methodWidth + 1 - methodName.length())) << ' ';
+            ss << description << std::setw((int)(descriptionWidth + arrow.length() - description.length())) << arrow << extra << '\n';
+                
+            return ss.str();
+        }
+        
+        bool IsPrint() const { return IsFailed() || (IsSuccess() && isTimeMeasuring);}
+        
+        bool IsSuccess() const { return error.Empty(); }
+        bool IsFailed() const { return !IsSuccess(); }
+        
+        std::string GetDesription() const 
+        {
             if (IsFailed()) {
-                ss << "FAILED" << " Line " << error.line << ": "
-                << error.code << " <-- " << error.extraMessage << '\n';
+                std::stringstream ss;
+                ss << "FAILED Line " << error.line << ": " << error.code;
                 return ss.str();
+            } else {
+                return "PASSED ";
             }
             
-            if (IsSuccess() && isTimeMeasuring) {
-                ss << "PASSED <-- " << (double)timeElapsedNanoseconds / 1000000.0 << "ms elapsed\n";
+        }
+        
+        std::string GetExtra() const
+        {
+            if (IsFailed()) {
+                return error.extraMessage;
+            } else {
+                std::stringstream ss;
+                ss << (double)timeElapsedNanoseconds / 1000000.0 << "ms elapsed";
                 return ss.str();
             }
-            
-            return "";
-        }
-        
-        bool IsSuccess() const {
-            return error.Empty();
-        }
-        
-        bool IsFailed() const {
-            return !IsSuccess();
         }
     };
     
     void PrintResults() {
-        const auto successfulMethodsCount = SuccessfulMethodsCount();
-        const auto allMethodsCount = _methodResults.size();
-        const auto longestMethodNameWidth = GetLongestMethodNameWidth();
-        
-        std::cout << "\n( " << successfulMethodsCount << " / " << allMethodsCount << " )"
+        const auto methodWidth = GetLongestMethodNameWidth();
+        const auto descriptionWidth = GetLongestDescriptionWidth();
+        std::cout << "\n( " << SuccessfulMethodsCount() << " / " << _methodResults.size() << " )"
                   << " in " << (double)GetTimeElapsed() / 1000000000.0 << "s with " << _bytesLeaked << " bytes leaked\n";
         
         std::cout << "=================================================\n";
         for (const auto& result : _methodResults)
-            std::cout << result.GetMessage(longestMethodNameWidth);
+            std::cout << result.GetMessage(methodWidth, descriptionWidth);
         std::cout << "=================================================\n\n";
     }
     
@@ -95,6 +111,13 @@ class TestClassBase {
         size_t longest = 0;
         for (const auto& result : _methodResults)
             longest = std::max(longest, result.methodName.length());
+        return longest;
+    }
+    
+    size_t GetLongestDescriptionWidth() const {
+        size_t longest = 0;
+        for (const auto& result : _methodResults)
+            longest = std::max(longest, result.GetDesription().length());
         return longest;
     }
 };
