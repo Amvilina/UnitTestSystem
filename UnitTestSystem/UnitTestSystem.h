@@ -64,14 +64,18 @@ TEST_METHOD_START(#name, false)           \
 TEST_METHOD_END                           \
 TEST_METHOD_START(#name, true)            \
 
-#define MUST_BE_TRUE(exp) if(!(exp)) throw(Error(__LINE__, #exp, "Expected True but was False"))
-#define MUST_BE_FALSE(exp) if(exp) throw(Error(__LINE__, #exp, "Expected False but was True"))
+#define MUST_BE_TRUE(exp) if(!(exp)) throw Error(__LINE__, #exp, "Expected True but was False")
+#define MUST_BE_FALSE(exp) if(exp) throw Error(__LINE__, #exp, "Expected False but was True")
+
+#define MUST_BE_EQUAL(a, b)                                                                                   \
+if ((a) != (b)) throw Error(__LINE__, std::string(#a) + std::string(" = ") + std::string(#b),                 \
+                                            std::to_string(a) + std::string(" != ") + std::to_string(b))      \
 
 #define MUST_BE_CLOSE_DOUBLES(a, b)                                                  \
 if (fabs((a) - (b)) > (fabs(a) < fabs(b) ? fabs(b) : fabs(a)) * 1e-5)                \
-    throw( Error( __LINE__,                                                          \
+    throw Error( __LINE__,                                                           \
                   std::string(#a) + std::string(" ~= ") + std::string(#b),           \
-                  std::to_string(a) + std::string (" != ") + std::to_string(b) ))    \
+                  std::to_string(a) + std::string (" != ") + std::to_string(b) )     \
 
 #define MUST_THROW_EXCEPTION(...)                                                                                  \
 try {                                                                                                              \
@@ -92,3 +96,5 @@ catch(...){ throw Error( __LINE__,                                              
                          #__VA_ARGS__,                                                                             \
                          std::string("There were no exceptions of type ") + std::string(#exceptionClass)); }'.'    \
 //This character '.' is to force user to write MUST_THROW_EXCEPTION(...); <- with semicolon at the end
+
+// TODO: MUST_EQUAL, MUST_NOT_EQUAL, ADD asserts

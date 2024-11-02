@@ -1,5 +1,5 @@
 #include <thread>
-#include <vector>
+
 #include "UnitTestSystem.h"
 
 TEST_MODULE_BEGIN(FirstModule)
@@ -10,6 +10,8 @@ TEST_METHOD(CorrectCode) {
     
     MUST_BE_FALSE(false);
     MUST_BE_FALSE(3 == 4);
+    
+    MUST_BE_EQUAL(3+12, 15);
     
     MUST_BE_CLOSE_DOUBLES(1.234567, 1 + 0.234566);
     
@@ -25,6 +27,10 @@ TEST_METHOD(MUST_BE_TRUE_error) {
 
 TEST_METHOD(MUST_BE_FALSE_error) {
     MUST_BE_FALSE(1 != 0);
+}
+
+TEST_METHOD(MUST_BE_EQUAL_error) {
+    MUST_BE_EQUAL(12 + 5, 1 + sizeof(char));
 }
 
 TEST_METHOD(MUST_BE_CLOSE_DOUBLES_error) {
