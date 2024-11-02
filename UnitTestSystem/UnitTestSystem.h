@@ -75,7 +75,7 @@ TEST_METHOD_START(#name, true)            \
 #define MUST_BE_FALSE(exp) if(exp) throw Error(__LINE__, #exp, "Expected False but was True")
 
 #define MUST_BE_EQUAL(a, b)                                                                                   \
-if ((a) != (b)) throw Error(__LINE__, std::string(#a) + std::string(" = ") + std::string(#b),                 \
+if ((a) != (b)) throw Error(__LINE__, std::string(#a) + std::string(" == ") + std::string(#b),                \
                                             std::to_string(a) + std::string(" != ") + std::to_string(b))      \
 
 #define MUST_BE_CLOSE_DOUBLES(a, b)                                                  \
