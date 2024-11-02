@@ -19,6 +19,8 @@ TEST_METHOD(CorrectCode) {
     
     std::vector<int> vec;
     MUST_THROW_SPECIFIC_EXCEPTION(std::out_of_range, vec.at(3));
+    
+    MUST_ASSERT(ASSERT(1 == 2));
 }
 
 TEST_METHOD(MUST_BE_TRUE_error) {
@@ -48,6 +50,14 @@ TEST_METHOD(MUST_THROW_SPECIFIC_EXCEPTION_error1) {
 TEST_METHOD(MUST_THROW_SPECIFIC_EXCEPTION_error2) {
     std::vector<int> vec;
     MUST_THROW_SPECIFIC_EXCEPTION(std::bad_cast, vec.at(0));
+}
+
+TEST_METHOD(MUST_ASSERT_error1) {
+    MUST_ASSERT(1+1);
+}
+
+TEST_METHOD(MUST_ASSERT_error2) {
+    MUST_ASSERT(ASSERT(1 == 1));
 }
 
 TEST_METHOD(RandomException) {

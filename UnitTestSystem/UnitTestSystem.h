@@ -2,6 +2,13 @@
 #include "TestClassBase.h"
 #include <cmath>
 
+namespace UnitTestSystem
+{
+    class Assert {};
+} // namespace UnitTestSystem
+
+#define ASSERT(expr) if(!(expr)) throw UnitTestSystem::Assert()
+
 #define TEST_MODULE_BEGIN(name)                                                         \
 class name : public UnitTestSystem::TestClassBase {                                     \
   public:                                                                               \
@@ -62,7 +69,6 @@ class name : public UnitTestSystem::TestClassBase {                             
     }                                                                                   \
 };                                                                                      \
 
-
 #define TEST_METHOD(name)                 \
 TEST_METHOD_END                           \
 TEST_METHOD_START(#name, false)           \
@@ -90,7 +96,8 @@ try {                                                                           
     throw Error(__LINE__, #__VA_ARGS__, "There were no exceptions");                                               \
 }                                                                                                                  \
 catch(const Error& e) {throw;}                                                                                     \
-catch(...) { }                                                                                                     \
+catch(...) { }'.'                                                                                                  \
+//This character '.' is to force user to write MUST_THROW_EXCEPTION(...); <- with semicolon at the end
 
 #define MUST_THROW_SPECIFIC_EXCEPTION(exceptionClass, ...)                                                         \
 try {                                                                                                              \
@@ -102,6 +109,14 @@ catch(const exceptionClass& e) { }                                              
 catch(...){ throw Error( __LINE__,                                                                                 \
                          #__VA_ARGS__,                                                                             \
                          std::string("There were no exceptions of type ") + std::string(#exceptionClass)); }'.'    \
-//This character '.' is to force user to write MUST_THROW_EXCEPTION(...); <- with semicolon at the end
+//This character '.' is to force user to write MUST_THROW_SPECIFIC_EXCEPTION(exeption_class, ...); <- with semicolon at the end
 
-// TODO: MUST_EQUAL, MUST_NOT_EQUAL, ADD asserts
+#define MUST_ASSERT(...)                                                         \
+try {                                                                            \
+    __VA_ARGS__;                                                                 \
+    throw Error(__LINE__, #__VA_ARGS__, "There were no asserts");                \
+}                                                                                \
+catch(const Error& e) {throw;}                                                   \
+catch(const UnitTestSystem::Assert& e) { }                                       \
+catch(...){throw;}'.'                                                            \
+//This character '.' is to force user to write MUST_ASSERT(...); <- with semicolon at the end
