@@ -79,13 +79,15 @@ class TestClassBase {
     void PrintResults() {
         const auto methodWidth = GetLongestMethodNameWidth();
         const auto descriptionWidth = GetLongestDescriptionWidth();
+        const auto extraWidth = GetLongestExtra();
         std::cout << "\n( " << SuccessfulMethodsCount() << " / " << _methodResults.size() << " )"
                   << " in " << (double)GetTimeElapsed() / 1000000000.0 << "s with " << _bytesLeaked << " bytes leaked\n";
         
-        std::cout << "=================================================\n";
+        PrintLine(6 + methodWidth + descriptionWidth + extraWidth);
         for (const auto& result : _methodResults)
             std::cout << result.GetMessage(methodWidth, descriptionWidth);
-        std::cout << "=================================================\n\n";
+        PrintLine(6 + methodWidth + descriptionWidth + extraWidth);
+        std::cout << std::endl;
     }
     
     std::string _name;
@@ -119,6 +121,19 @@ class TestClassBase {
         for (const auto& result : _methodResults)
             longest = std::max(longest, result.GetDesription().length());
         return longest;
+    }
+    
+    size_t GetLongestExtra() const {
+        size_t longest = 0;
+        for (const auto& result : _methodResults)
+            longest = std::max(longest, result.GetExtra().length());
+        return longest;
+    }
+    
+    void PrintLine(size_t count) const {
+        for (size_t i = 0; i < count; ++i)
+            std::cout << "=";
+        std::cout << '\n';
     }
 };
 
