@@ -3,139 +3,201 @@
 #include "MemoryAllocator.h"
 #include <iostream>
 #include <iomanip>
+#include <functional>
 
 namespace UnitTestSystem
 {
 
-class TestClassBase {
-  protected:
-    TestClassBase() {}
-    
-    struct Error {
-        uint64_t line = 0;
-        std::string code;
-        std::string extraMessage;
+struct Error {
+    uint64_t line = 0;
+    std::string code;
+    std::string message;
 
-        Error() {}
-        Error(uint64_t line, const std::string& code, const std::string& extraMessage)
-        : line(line), code(code), extraMessage(extraMessage) {}
-        
-        bool Empty() const { return (line == 0) && code.empty() && extraMessage.empty(); }
-        bool NotEmpty() const { return !Empty(); }
-    };
+    Error() {}
+    Error(uint64_t line, const std::string& code, const std::string& message)
+    : line(line), code(code), message(message) {}
     
-    struct MethodResult {
-        std::string methodName;
-        Error error;
-        uint64_t timeElapsedNanoseconds = 0;
-        bool isTimeMeasuring = false;
+    bool Empty() const { return (line == 0) && code.empty() && message.empty(); }
+    bool NotEmpty() const { return !Empty(); }
+};
+
+struct FunctionResult {
+    std::string name;
+    Error error;
+    uint64_t timeElapsedNanoseconds = 0;
+    bool isTimeMeasuring = false;
+    
+    bool IsPrint() const { return IsFailed() || (IsSuccess() && isTimeMeasuring);}
+    bool IsSuccess() const { return error.Empty(); }
+    bool IsFailed() const { return !IsSuccess(); }
+    
+    std::string GetMessage(size_t longestNameLength, size_t longestDescriptionLength) const
+    {
+        if (!IsPrint())
+            return "";
         
-        std::string GetMessage(size_t methodWidth, size_t descriptionWidth) const
-        {
-            if (!IsPrint())
-                return "";
+        std::stringstream ss;
+        
+        const auto description = GetDescription();
+        const auto extra = GetExtra();
+        const std::string arrow = " <-- ";
+        
+        ss << name << std::setw((int)(longestNameLength + 1 - name.length())) << ' ';
+        ss << description << std::setw((int)(longestDescriptionLength + arrow.length() - description.length())) << arrow << extra << '\n';
             
+        return ss.str();
+    }
+    
+    std::string GetDescription() const
+    {
+        if (IsFailed()) {
             std::stringstream ss;
-            
-            const auto description = GetDesription();
-            const auto extra = GetExtra();
-            const std::string arrow = " <-- ";
-            
-            ss << methodName << std::setw((int)(methodWidth + 1 - methodName.length())) << ' ';
-            ss << description << std::setw((int)(descriptionWidth + arrow.length() - description.length())) << arrow << extra << '\n';
-                
+            ss << "FAILED Line " << error.line << ": " << error.code;
+            return ss.str();
+        } else {
+            return "PASSED ";
+        }
+        
+    }
+    
+    std::string GetExtra() const
+    {
+        if (IsFailed()) {
+            return error.message;
+        } else {
+            std::stringstream ss;
+            ss << (double)timeElapsedNanoseconds / 1e6 << "ms elapsed";
             return ss.str();
         }
-        
-        bool IsPrint() const { return IsFailed() || (IsSuccess() && isTimeMeasuring);}
-        
-        bool IsSuccess() const { return error.Empty(); }
-        bool IsFailed() const { return !IsSuccess(); }
-        
-        std::string GetDesription() const 
-        {
-            if (IsFailed()) {
-                std::stringstream ss;
-                ss << "FAILED Line " << error.line << ": " << error.code;
-                return ss.str();
-            } else {
-                return "PASSED ";
-            }
-            
-        }
-        
-        std::string GetExtra() const
-        {
-            if (IsFailed()) {
-                return error.extraMessage;
-            } else {
-                std::stringstream ss;
-                ss << (double)timeElapsedNanoseconds / 1000000.0 << "ms elapsed";
-                return ss.str();
-            }
-        }
-    };
+    }
+};
+
+template <class T>
+class FunctionRegister {
+  public:
+    FunctionRegister(const std::string& name, const std::function<void()>& testFunction, bool timeMeasuring) {
+        T::AddTestFunction(name, testFunction, timeMeasuring);
+    }
+};
+
+template <class T>
+class Base {
+  private:
+    friend class FunctionRegister<T>;
     
-    void PrintResults() {
-        const auto methodWidth = GetLongestMethodNameWidth();
-        const auto descriptionWidth = GetLongestDescriptionWidth();
-        const auto extraWidth = GetLongestExtra();
-        std::cout << "\n( " << SuccessfulMethodsCount() << " / " << _methodResults.size() << " )"
-                  << " in " << (double)GetTimeElapsed() / 1000000000.0 << "s with " << _bytesLeaked << " bytes leaked\n";
+    struct FunctionInfo {
+        std::string name;
+        std::function<void()> function;
+        bool timeMeasuring;
+    };
+    static inline std::vector<FunctionInfo> _functionsInfo;
+    
+    static void AddTestFunction(const std::string& name, const std::function<void()>& testFunction, bool timeMeasuring) {
+        _functionsInfo.push_back({name, testFunction, timeMeasuring});
+    }
+  public:
+    static void Run() {
+        const auto results = RunAndGetResults();
+        const auto stats = GetStats(results);
         
-        PrintLine(6 + methodWidth + descriptionWidth + extraWidth);
-        for (const auto& result : _methodResults)
-            std::cout << result.GetMessage(methodWidth, descriptionWidth);
-        PrintLine(6 + methodWidth + descriptionWidth + extraWidth);
+        std::cout << T::GetName() << ": ";
+        std::cout << "( " << stats.successfulCount << " / " << stats.allCount << " )"
+        << " in " << (double)stats.timeElapsed / 1e9 << "s\n";
+        
+        const auto lineLength = 6 + stats.longestNameLength + stats.longestDescriptionLength + stats.longestExtraLength;
+        PrintLine(lineLength);
+        for (const auto& result : results)
+            std::cout << result.GetMessage(stats.longestNameLength, stats.longestDescriptionLength);
+        PrintLine(lineLength);
         std::cout << std::endl;
     }
-    
-    std::string _name;
-    uint64_t _bytesLeaked;
-    std::vector<MethodResult> _methodResults;
   private:
-    size_t SuccessfulMethodsCount() const {
-        size_t count = 0;
-        for (const auto& result : _methodResults)
+    static std::vector<FunctionResult> RunAndGetResults() {
+        std::vector<FunctionResult> results;
+        Timer timer;
+        
+        for (const auto& info : _functionsInfo) {
+            FunctionResult result;
+            result.name = info.name;
+            result.isTimeMeasuring = info.timeMeasuring;
+            
+            MemoryAllocator::ResetUsedBytes();
+            timer.Restart();
+            
+            try { info.function(); }
+            catch (const Error& error) { result.error = error; }
+            catch (...) {
+                Error error(0, "", "Unknown exception occured!");
+                result.error = error;
+            }
+            
+            result.timeElapsedNanoseconds = timer.GetNanoseconds();
+            
+            if (result.IsSuccess()) {
+                const auto bytesLeaked = MemoryAllocator::GetUsedBytes();
+                if (bytesLeaked > 0){
+                    Error error(0, "", "Memory leak: " + std::to_string(bytesLeaked) + " byte(s)");
+                    result.error = error;
+                }
+            }
+            
+            results.push_back(result);
+        }
+            
+        return results;
+    }
+    
+    struct Stats {
+        size_t allCount = 0;
+        size_t successfulCount = 0;
+        uint64_t timeElapsed = 0;
+        size_t longestNameLength = 0;
+        size_t longestDescriptionLength = 0;
+        size_t longestExtraLength = 0;
+    };
+    static Stats GetStats(const std::vector<FunctionResult>& results) {
+        Stats stats;
+        stats.allCount = results.size();
+        
+        for (const auto& result : results) {
             if (result.IsSuccess())
-                ++count;
-        return count;
+                ++stats.successfulCount;
+            stats.timeElapsed += result.timeElapsedNanoseconds;
+            stats.longestNameLength = std::max(stats.longestNameLength, result.name.length());
+            stats.longestDescriptionLength = std::max(stats.longestDescriptionLength, result.GetDescription().length());
+            stats.longestExtraLength = std::max(stats.longestExtraLength, result.GetExtra().length());
+        }
+        
+        return stats;
     }
     
-    uint64_t GetTimeElapsed() const {
-        size_t timeElapsed = 0;
-        for (const auto& result : _methodResults)
-            timeElapsed += result.timeElapsedNanoseconds;
-        return timeElapsed;
-    }
-    
-    size_t GetLongestMethodNameWidth() const {
-        size_t longest = 0;
-        for (const auto& result : _methodResults)
-            longest = std::max(longest, result.methodName.length());
-        return longest;
-    }
-    
-    size_t GetLongestDescriptionWidth() const {
-        size_t longest = 0;
-        for (const auto& result : _methodResults)
-            longest = std::max(longest, result.GetDesription().length());
-        return longest;
-    }
-    
-    size_t GetLongestExtra() const {
-        size_t longest = 0;
-        for (const auto& result : _methodResults)
-            longest = std::max(longest, result.GetExtra().length());
-        return longest;
-    }
-    
-    void PrintLine(size_t count) const {
+    static void PrintLine(size_t count) {
         for (size_t i = 0; i < count; ++i)
             std::cout << "=";
         std::cout << '\n';
     }
 };
+
+void MustBeTrue(bool a, uint64_t line, const std::string& code) {
+    if (!a)
+        throw Error(line, code, "Expected True but was False");
+}
+
+void MustBeFalse(bool a, uint64_t line, const std::string& code) {
+    if (a)
+        throw Error(line, code, "Expected False but was True");
+}
+
+template <class T1, class T2>
+void MustBeEqual(T1 a, T2 b, uint64_t line, const std::string& aCode, const std::string& bCode) {
+    if (a != b)
+        throw Error(line, aCode + " == " + bCode, std::to_string(a) + " != " + std::to_string(b));
+}
+
+void MustBeCloseDoubles(double a, double b, uint64_t line, const std::string& aCode, const std::string& bCode) {
+    if (fabs(a - b) > std::max(fabs(a), fabs(b)) * 1e-5)
+        throw Error(line, aCode + " ~= " + bCode, std::to_string(a) + " != " + std::to_string(b));
+}
 
 } // namespace UnitTestSystem
 
