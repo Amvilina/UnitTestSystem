@@ -98,6 +98,7 @@ TEST_MODULE(SecondEmptyModule) {
 }
 
 int main(int argc, const char * argv[]) {
+    // TODO: ASSERTS must show information, right now it's just unknown exception
     FirstModule::Run();
     SecondEmptyModule::Run();
     return 0;
