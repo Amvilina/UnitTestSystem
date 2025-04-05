@@ -123,6 +123,14 @@ struct Error {
     bool NotEmpty() const { return !Empty(); }
 };
 
+struct Assert {
+    uint64_t line;
+    std::string code;
+    
+    Assert(uint64_t line, const std::string& code)
+    : line(line), code(code) {}
+};
+
 struct FunctionResult {
     std::string name;
     Error error;
@@ -204,7 +212,7 @@ class Base {
         
         std::cout << T::GetName() << ": ";
         std::cout << "( " << stats.successfulCount << " / " << stats.allCount << " )"
-        << " in " << (double)stats.timeElapsed / 1e9 << "s\n";
+        << " in " << (double)stats.timeElapsed / 1e9 << "s " << (stats.IsSuccess() ? "PASSED\n": "FAILED\n");
         
         const auto lineLength = 6 + stats.longestNameLength + stats.longestDescriptionLength + stats.longestExtraLength;
         PrintLine(lineLength);
@@ -228,6 +236,10 @@ class Base {
             
             try { info.function(); }
             catch (const Error& error) { result.error = error; }
+            catch (const Assert& assert) {
+                Error error(assert.line, assert.code, "Assert triggered!");
+                result.error = error;
+            }
             catch (...) {
                 Error error(0, "", "Unknown exception occured!");
                 result.error = error;
@@ -256,7 +268,12 @@ class Base {
         size_t longestNameLength = 0;
         size_t longestDescriptionLength = 0;
         size_t longestExtraLength = 0;
+        
+        bool IsSuccess() const {
+            return successfulCount == allCount;
+        }
     };
+    
     static Stats GetStats(const std::vector<FunctionResult>& results) {
         Stats stats;
         stats.allCount = results.size();
@@ -303,13 +320,7 @@ void MustBeCloseDoubles(double a, double b, uint64_t line, const std::string& aC
 
 } // namespace UnitTestSystem
 
-namespace UnitTestSystem
-{
-    class Assert {};
-} // namespace UnitTestSystem
-
-#define ASSERT(expr) if(!(expr)) throw UnitTestSystem::Assert()
-
+#define ASSERT(exp) if(!(exp)) throw UnitTestSystem::Assert(__LINE__, #exp)
 
 #define TEST_MODULE(name)                                                                                          \
 class name : public UnitTestSystem::Base<name> {                                                                   \
@@ -360,7 +371,7 @@ catch(...){ throw Error( __LINE__,                                              
 #define MUST_ASSERT(...)                                                                                           \
 try {                                                                                                              \
     __VA_ARGS__;                                                                                                   \
-    throw Error(__LINE__, #__VA_ARGS__, "There were no asserts");                                                  \
+    throw Error(__LINE__, #__VA_ARGS__, "There were no assert triggers");                                          \
 }                                                                                                                  \
 catch(const Error& e) {throw;}                                                                                     \
 catch(const UnitTestSystem::Assert& e) { }                                                                         \

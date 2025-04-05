@@ -21,6 +21,14 @@ struct Error {
     bool NotEmpty() const { return !Empty(); }
 };
 
+struct Assert {
+    uint64_t line;
+    std::string code;
+    
+    Assert(uint64_t line, const std::string& code)
+    : line(line), code(code) {}
+};
+
 struct FunctionResult {
     std::string name;
     Error error;
@@ -102,7 +110,7 @@ class Base {
         
         std::cout << T::GetName() << ": ";
         std::cout << "( " << stats.successfulCount << " / " << stats.allCount << " )"
-        << " in " << (double)stats.timeElapsed / 1e9 << "s\n";
+        << " in " << (double)stats.timeElapsed / 1e9 << "s " << (stats.IsSuccess() ? "PASSED\n": "FAILED\n");
         
         const auto lineLength = 6 + stats.longestNameLength + stats.longestDescriptionLength + stats.longestExtraLength;
         PrintLine(lineLength);
@@ -126,6 +134,10 @@ class Base {
             
             try { info.function(); }
             catch (const Error& error) { result.error = error; }
+            catch (const Assert& assert) {
+                Error error(assert.line, assert.code, "Assert triggered!");
+                result.error = error;
+            }
             catch (...) {
                 Error error(0, "", "Unknown exception occured!");
                 result.error = error;
@@ -154,7 +166,12 @@ class Base {
         size_t longestNameLength = 0;
         size_t longestDescriptionLength = 0;
         size_t longestExtraLength = 0;
+        
+        bool IsSuccess() const {
+            return successfulCount == allCount;
+        }
     };
+    
     static Stats GetStats(const std::vector<FunctionResult>& results) {
         Stats stats;
         stats.allCount = results.size();

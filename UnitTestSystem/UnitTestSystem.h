@@ -2,13 +2,7 @@
 #include "TestClassBase.h"
 #include <cmath>
 
-namespace UnitTestSystem
-{
-    class Assert {};
-} // namespace UnitTestSystem
-
-#define ASSERT(expr) if(!(expr)) throw UnitTestSystem::Assert()
-
+#define ASSERT(exp) if(!(exp)) throw UnitTestSystem::Assert(__LINE__, #exp)
 
 #define TEST_MODULE(name)                                                                                          \
 class name : public UnitTestSystem::Base<name> {                                                                   \
@@ -59,7 +53,7 @@ catch(...){ throw Error( __LINE__,                                              
 #define MUST_ASSERT(...)                                                                                           \
 try {                                                                                                              \
     __VA_ARGS__;                                                                                                   \
-    throw Error(__LINE__, #__VA_ARGS__, "There were no asserts");                                                  \
+    throw Error(__LINE__, #__VA_ARGS__, "There were no assert triggers");                                          \
 }                                                                                                                  \
 catch(const Error& e) {throw;}                                                                                     \
 catch(const UnitTestSystem::Assert& e) { }                                                                         \

@@ -58,6 +58,10 @@ TEST_MODULE(FirstModule) {
     TEST_FUNCTION(MUST_ASSERT_error2) {
         MUST_ASSERT(ASSERT(1 == 1));
     }
+    
+    TEST_FUNCTION(ASSERT_PRINT) {
+        ASSERT(1 == 2);
+    }
 
     TEST_FUNCTION(RandomException) {
         throw 123;
@@ -98,7 +102,6 @@ TEST_MODULE(SecondEmptyModule) {
 }
 
 int main(int argc, const char * argv[]) {
-    // TODO: ASSERTS must show information, right now it's just unknown exception
     FirstModule::Run();
     SecondEmptyModule::Run();
     return 0;
